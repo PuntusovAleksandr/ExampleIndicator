@@ -71,8 +71,11 @@ public class CircleBackground extends View
     private static final int totalNicks = 48;       // общее количество разделителей
     private static final float degreesPerNick = 360.0f / totalNicks;        // градусов на1 шьрих
     private static final int centerDegree = totalNicks / 2; // the one in the top center (12 o'clock)
-    private static final int minDegrees = 0;
-    private static final int maxDegrees = 110;
+    private static final int minDegrees = 50;
+    private static final int maxDegrees = 130;
+    private static final int showTextItem = 5;
+
+
 
     // цвет
     private static final int colorWicks = Color.parseColor("#ffffff");  // вся шкала
@@ -255,7 +258,7 @@ public class CircleBackground extends View
 
         // текста
         textPath = new Path();
-        textPath.addArc(new RectF(0.24f, 0.24f, 0.76f, 0.76f), -75.0f, -180.0f);
+        textPath.addArc(new RectF(0.24f, 0.24f, 0.76f, 0.76f), -200.0f, -180.0f);
 //        textPath.addArc(new RectF(0.24f, 0.24f, 0.76f, 0.76f), -120.0f, -180.0f);
 
 
@@ -387,7 +390,9 @@ public class CircleBackground extends View
     }
 
     private int nickToDegree(int nick) {
-        int rawDegree = ((nick < totalNicks / 2) ? nick : (nick - totalNicks)) * 2;
+        int i = (maxDegrees - minDegrees) / (showTextItem * countWicks);
+
+        int rawDegree = nick * i ;
 //        int rawDegree = ((nick < totalNicks / 2) ? nick : (nick - totalNicks)) * 2;
         int shiftedDegree = rawDegree + centerDegree;
         return shiftedDegree;
