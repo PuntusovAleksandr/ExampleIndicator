@@ -369,7 +369,7 @@ public class CircleBackground extends View
             float y1 = scaleRect.top - 0.02f;       // установка растояния начала штриха от круга
             float y2 = y1 - 0.01f; // длина штриха
 
-            canvas.drawLine(0.5f, y1, 0.5f, y2, scalePaint);
+            canvas.drawLine(0.5f, y1, 0.5f, y2, scalePaint);        // 1 штрих
 
             // вычисляем значение
             if (i % countWicks == 0) {
