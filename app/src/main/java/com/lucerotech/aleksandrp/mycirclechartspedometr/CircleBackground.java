@@ -59,7 +59,9 @@ public class CircleBackground extends View
     private Path textPath;     // text decimal
     private Paint scaleText;
     private Paint scalePaint;
+    private Paint scaleInnerPaint;// внутренний круг
     private RectF scaleRect;        // круг
+    private RectF scaleInnerRect;        // внутренний круг
 
     // text title
     private Paint titlePaint;
@@ -296,7 +298,7 @@ public class CircleBackground extends View
 
         // шкала и текст
         scalePaint = new Paint();
-        scalePaint.setStyle(Paint.Style.STROKE);
+        scalePaint.setStyle(Paint.Style.FILL);
 //        scalePaint.setColor(colorWicks);
         scalePaint.setShader(new LinearGradient(0.0f, 0.0f, 0.750f, 0.750f,
                 Color.parseColor(colorInnerCircleFrom),
@@ -304,6 +306,13 @@ public class CircleBackground extends View
                 Shader.TileMode.REPEAT));
         scalePaint.setStrokeWidth(0.005f);
         scalePaint.setAntiAlias(true);
+
+        // шкала и текст
+        scaleInnerPaint = new Paint();
+        scaleInnerPaint.setStyle(Paint.Style.FILL);
+        scaleInnerPaint.setColor(Color.parseColor(colorBacgroundInCircle));
+        scaleInnerPaint.setStrokeWidth(0.005f);
+        scaleInnerPaint.setAntiAlias(true);
 
         // текст
         // текст на шкале
@@ -330,6 +339,9 @@ public class CircleBackground extends View
         scaleRect = new RectF();
         scaleRect.set(faceRect.left + scalePosition, faceRect.top + scalePosition,
                 faceRect.right - scalePosition, faceRect.bottom - scalePosition);
+        scaleInnerRect = new RectF();
+        scaleInnerRect.set(scaleRect.left + rimSize, scaleRect.top + rimSize,
+                scaleRect.right - rimSize, scaleRect.bottom - rimSize);
 
         titlePaint = new Paint();
         titlePaint.setColor(colorTitle);
@@ -411,7 +423,7 @@ public class CircleBackground extends View
 
 //        colorSegmentBig = "#269BFBFD";
 //        colorSegmentSmall = "#889BFBFD";
-//        colorLines = "#000000";
+//        colorLines = "#4bf7f9";
 
 //        }
 
@@ -483,6 +495,7 @@ public class CircleBackground extends View
     // риссуем шкалу
     private void drawScale(Canvas canvas) {
         canvas.drawOval(scaleRect, scalePaint);
+        canvas.drawOval(scaleInnerRect, scaleInnerPaint);
 
         canvas.save(Canvas.MATRIX_SAVE_FLAG);
         for (int i = 0; i < totalNicks; ++i) {
@@ -540,8 +553,6 @@ public class CircleBackground extends View
 
         canvas.drawArc(rimRect, startArc, midlArc, true, paintArcBig);
         canvas.drawArc(rimRect, startArc + midlArc, endArc, true, paintArcSmall);
-//        canvas.drawLine(0, 0, 480, 650,paintLine);
-//        canvas.drawLine(startX, startY, x1, y1, paintLine);
 
         float y11 = rimRect.top - 0.04f;       // установка растояния начала штриха от круга
         float y2 = y11 - 0.01f; // длина штриха
