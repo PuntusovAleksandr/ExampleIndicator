@@ -2,20 +2,16 @@ package com.lucerotech.aleksandrp.mycirclechartspedometr;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.LightingColorFilter;
 import android.graphics.LinearGradient;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -30,7 +26,24 @@ public class CircleBackground extends View
 
     private static final String TAG = CircleBackground.class.getSimpleName();
 
-//    private Handler handler;
+    private String colorBacgroundInCircle, colorRainbow = "#4bf7f9";
+    private String colorOutCircleFrom, colorOutCircleTo;
+    private String colorInnerCircleFrom, colorInnerCircleTo;
+    private String colorSegmentBig, colorSegmentSmall, colorLines;
+
+    //    private Handler handler;
+
+    // rainbow
+    private RectF rimRainbowRect;
+    private Paint rimCirclePaintRainbow;
+
+    private RectF rimRainbowSmallRect;
+    private Paint rimCircleSmallPaintRainbow;
+
+    // for lines
+    private Paint paintArcBig;
+    private Paint paintArcSmall;
+    private Paint paintLine;
 
     // drawing tools
     private RectF rimRect;
@@ -38,8 +51,8 @@ public class CircleBackground extends View
     private Paint rimCirclePaint;
 
     private RectF faceRect;
-    private Bitmap faceTexture;
-    private Paint facePaint;
+    //    private Bitmap faceTexture;
+//    private Paint facePaint;
     private Paint rimShadowPaint;
 
     // шкала
@@ -52,10 +65,10 @@ public class CircleBackground extends View
     private Paint titlePaint;
     private Path titlePath;
 
-    private Paint logoPaint;
-    private Bitmap logo;
-    private Matrix logoMatrix;
-    private float logoScale;
+//    private Paint logoPaint;
+//    private Bitmap logo;
+//    private Matrix logoMatrix;
+//    private float logoScale;
 
     private Paint handPaint;
     private Path handPath;
@@ -76,11 +89,10 @@ public class CircleBackground extends View
     private static final int showTextItem = 5;
 
 
-
     // цвет
-    private static final int colorWicks = Color.parseColor("#ffffff");  // вся шкала
-    private static final int colorTitle = Color.parseColor("#adadae");
-    private static final int color = Color.parseColor("#4bf7f9");       // сентер
+    private static int colorWicks;
+    private static int colorTitle;
+    private static int color;
 
     // text размер
     private static final float textSize = 0.05f;       // сентер
@@ -153,6 +165,8 @@ public class CircleBackground extends View
     private void init() {
 //        handler = new Handler();
 
+        setParamsColorString();
+
         initDrawingTools();
 
 
@@ -190,15 +204,64 @@ public class CircleBackground extends View
 //    }
 
     private void initDrawingTools() {
+        float rimRaindowSize = 0.01f;      // ширина обода
+        rimRainbowRect = new RectF(0.03f, 0.03f, 0.96f, 0.96f);
+        rimRainbowSmallRect = new RectF(rimRainbowRect.left + rimRaindowSize,
+                rimRainbowRect.top + rimRaindowSize,
+                rimRainbowRect.right - rimRaindowSize,
+                rimRainbowRect.bottom - rimRaindowSize);
         rimRect = new RectF(0.1f, 0.1f, 0.9f, 0.9f);
+
 
         // the linear gradient is a bit skewed for realism
         rimPaint = new Paint();
         rimPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-        rimPaint.setShader(new LinearGradient(0.40f, 0.0f, 0.60f, 1.0f,
-                Color.rgb(0xf0, 0xf5, 0xf0),
-                Color.rgb(0x30, 0x31, 0x30),
+        rimPaint.setShader(new LinearGradient(0.0f, 0.40f, 0.90f, 0.50f,
+                Color.parseColor(colorOutCircleFrom),
+                Color.parseColor(colorOutCircleTo),
                 Shader.TileMode.CLAMP));
+
+        //
+
+        // the linear gradient is a bit skewed for realism
+//        rimCirclePaintRainbow = new Paint();
+//        rimCirclePaintRainbow.setFlags(Paint.ANTI_ALIAS_FLAG);
+//        rimCirclePaintRainbow.setShader(new LinearGradient(0.0f, 0.40f, 0.90f, 0.50f,
+//                Color.parseColor(colorOutCircleFrom),
+//                Color.parseColor(colorOutCircleTo),
+//                Shader.TileMode.CLAMP));
+//
+        rimCirclePaintRainbow = new Paint();
+        rimCirclePaintRainbow.setAntiAlias(true);
+        rimCirclePaintRainbow.setStyle(Paint.Style.STROKE);
+//        rimCirclePaintRainbow.setColor(Color.YELLOW);
+        rimCirclePaintRainbow.setShader(new LinearGradient(0.0f, 0.50f, 0.40f, 0.550f,
+                Color.parseColor(colorRainbow),
+                Color.TRANSPARENT,
+                Shader.TileMode.CLAMP));
+        rimCirclePaintRainbow.setStrokeWidth(0.015f);
+
+        rimCircleSmallPaintRainbow = new Paint();
+        rimCircleSmallPaintRainbow.setAntiAlias(true);
+//        rimCircleSmallPaintRainbow.setStyle(Paint.Style.STROKE);
+        rimCirclePaintRainbow.setColor(Color.YELLOW);
+//        rimCircleSmallPaintRainbow.setShader(new LinearGradient(0.0f, 0.50f, 0.40f, 0.550f,
+//                Color.parseColor(colorOutCircleFrom),
+//                Color.TRANSPARENT,
+//                Shader.TileMode.CLAMP));
+        rimCircleSmallPaintRainbow.setStrokeWidth(0.015f);
+
+
+        paintArcBig = new Paint();
+        paintArcBig.setColor(Color.parseColor(colorSegmentBig));
+
+        paintArcSmall = new Paint();
+        paintArcSmall.setColor(Color.parseColor(colorSegmentSmall));
+
+        paintLine = new Paint();
+        paintLine.setColor(Color.parseColor(colorLines));
+//        paintLine.setColor(Color.BLUE);
+        paintLine.setStrokeWidth(0.005f);
 
         rimCirclePaint = new Paint();
         rimCirclePaint.setAntiAlias(true);
@@ -208,28 +271,27 @@ public class CircleBackground extends View
 
         float rimSize = 0.005f;      // ширина обода
         faceRect = new RectF();
-        faceRect.set(rimRect.left + rimSize, rimRect.top + rimSize,
-                rimRect.right - rimSize, rimRect.bottom - rimSize);
+        faceRect.set(rimRect.left + rimSize,
+                rimRect.top + rimSize,
+                rimRect.right - rimSize,
+                rimRect.bottom - rimSize);
 
-        faceTexture = BitmapFactory.decodeResource(getContext().getResources(),
-                R.drawable.background_dark);
-        BitmapShader paperShader = new BitmapShader(faceTexture,
-                Shader.TileMode.MIRROR,
-                Shader.TileMode.MIRROR);
-        Matrix paperMatrix = new Matrix();
-        facePaint = new Paint();
-        facePaint.setFilterBitmap(true);
-        paperMatrix.setScale(1.0f / faceTexture.getWidth(),
-                1.0f / faceTexture.getHeight());
-        paperShader.setLocalMatrix(paperMatrix);
-        facePaint.setStyle(Paint.Style.FILL);
-        facePaint.setShader(paperShader);
+//        faceTexture = BitmapFactory.decodeResource(getContext().getResources(),
+//                R.drawable.background_dark);
+//        BitmapShader paperShader = new BitmapShader(faceTexture,
+//                Shader.TileMode.MIRROR,
+//                Shader.TileMode.MIRROR);
+//        Matrix paperMatrix = new Matrix();
+//        facePaint = new Paint();
+//        facePaint.setFilterBitmap(true);
+//        paperMatrix.setScale(1.0f / faceTexture.getWidth(),
+//                1.0f / faceTexture.getHeight());
+//        paperShader.setLocalMatrix(paperMatrix);
+//        facePaint.setStyle(Paint.Style.FILL);
+//        facePaint.setShader(paperShader);
 
         rimShadowPaint = new Paint();
-        rimShadowPaint.setShader(new RadialGradient(0.5f, 0.5f, faceRect.width() / 2.0f,
-                new int[]{0x00000000, 0x00000500, 0x50000500},
-                new float[]{0.96f, 0.96f, 0.99f},
-                Shader.TileMode.MIRROR));
+        rimShadowPaint.setColor(Color.parseColor(colorBacgroundInCircle));
         rimShadowPaint.setStyle(Paint.Style.FILL);
 
         // шкала и текст
@@ -237,8 +299,8 @@ public class CircleBackground extends View
         scalePaint.setStyle(Paint.Style.STROKE);
 //        scalePaint.setColor(colorWicks);
         scalePaint.setShader(new LinearGradient(0.0f, 0.0f, 0.750f, 0.750f,
-                Color.parseColor("#0b1348"),
-                Color.parseColor("#4bf7f9"),
+                Color.parseColor(colorInnerCircleFrom),
+                Color.parseColor(colorInnerCircleTo),
                 Shader.TileMode.REPEAT));
         scalePaint.setStrokeWidth(0.005f);
         scalePaint.setAntiAlias(true);
@@ -281,13 +343,13 @@ public class CircleBackground extends View
         titlePath.addArc(new RectF(0.24f, 0.24f, 0.76f, 0.76f), -180.0f, -180.0f);
 
 
-        logoPaint = new Paint();
-        logoPaint.setFilterBitmap(true);
-        logo = BitmapFactory.decodeResource(getContext().getResources(), R.mipmap.ic_launcher);
-        logoMatrix = new Matrix();
-        logoScale = (1.0f / logo.getWidth()) * 0.3f;
-        ;
-        logoMatrix.setScale(logoScale, logoScale);
+//        logoPaint = new Paint();
+//        logoPaint.setFilterBitmap(true);
+//        logo = BitmapFactory.decodeResource(getContext().getResources(), R.mipmap.ic_launcher);
+//        logoMatrix = new Matrix();
+//        logoScale = (1.0f / logo.getWidth()) * 0.3f;
+//        ;
+//        logoMatrix.setScale(logoScale, logoScale);
 
         handPaint = new Paint();
         handPaint.setAntiAlias(true);
@@ -311,6 +373,52 @@ public class CircleBackground extends View
 
         backgroundPaint = new Paint();
         backgroundPaint.setFilterBitmap(true);
+    }
+
+    @NonNull
+    private void setParamsColorString() {
+        String centerStr = "#000000", wicksStr = "#000000", titleStr = "#000000";
+
+        // background circle
+        colorBacgroundInCircle = "#f2f6fb";
+
+        // gradient out circle
+        colorOutCircleFrom = "#000000";
+        colorOutCircleTo = "#000000";
+
+        // gradient inner circle
+        colorInnerCircleFrom = "#000000";
+        colorInnerCircleTo = "#000000";
+
+        // color lines
+        colorSegmentBig = "#54A1A1A1";
+        colorSegmentSmall = "#9A4D4D4D";
+        colorLines = "#000000";
+//        colorLines = "#FF4081";
+
+//        if (SettingsApp.getInstance().isThemeDark()) {
+//            colorBacgroundInCircle = "#0b1348";
+//
+//            colorOutCircleFrom = "#4bf7f9";
+//            colorOutCircleTo = "#0b1348";
+//
+//            colorInnerCircleFrom = "#0b1348";
+//            colorInnerCircleTo = "#4bf7f9";
+//
+//            centerStr = "#4bf7f9";
+//            wicksStr = "#ffffff";
+//            titleStr = "#adadae";
+
+//        colorSegmentBig = "#269BFBFD";
+//        colorSegmentSmall = "#889BFBFD";
+//        colorLines = "#000000";
+
+//        }
+
+        colorWicks = Color.parseColor(wicksStr);  // вся шкала
+        colorTitle = Color.parseColor(titleStr);
+        color = Color.parseColor(centerStr);       // сентер
+
     }
 
     @Override
@@ -346,6 +454,15 @@ public class CircleBackground extends View
     }
 
 
+    // рисует радугу
+    private void drawRainBow(Canvas canvas) {
+        // first, draw the rainbow body
+        canvas.drawOval(rimRainbowRect, rimCirclePaintRainbow);
+
+//        canvas.drawOval(rimRainbowSmallRect, rimCircleSmallPaintRainbow);
+
+    }
+
     // рисует внешний круг
     private void drawRim(Canvas canvas) {
         // first, draw the metallic body
@@ -356,7 +473,7 @@ public class CircleBackground extends View
 
     // рисует фон
     private void drawFace(Canvas canvas) {
-        canvas.drawOval(faceRect, facePaint); // фон круга до границы
+//        canvas.drawOval(faceRect, facePaint); // фон круга до границы
 //         draw the inner rim circle
         canvas.drawOval(faceRect, rimCirclePaint); // фон круга до границы
         // draw the rim shadow inside the face
@@ -392,7 +509,7 @@ public class CircleBackground extends View
     private int nickToDegree(int nick) {
         int i = (maxDegrees - minDegrees) / (showTextItem * countWicks);
 
-        int rawDegree = nick * i ;
+        int rawDegree = nick * i;
 //        int rawDegree = ((nick < totalNicks / 2) ? nick : (nick - totalNicks)) * 2;
         int shiftedDegree = rawDegree + centerDegree;
         return shiftedDegree;
@@ -407,25 +524,57 @@ public class CircleBackground extends View
         canvas.drawTextOnPath(title, titlePath, 0.0f, 0.0f, titlePaint);
     }
 
-    private void drawLogo(Canvas canvas) {
-        canvas.save(Canvas.MATRIX_SAVE_FLAG);
-        canvas.translate(0.5f - logo.getWidth() * logoScale / 2.0f,
-                0.5f - logo.getHeight() * logoScale / 2.0f);
 
-        int color = 0x00000000;
-        float position = getRelativeTemperaturePosition();
-        if (position < 0) {
-            color |= (int) ((0xf0) * -position); // blue
-        } else {
-            color |= ((int) ((0xf0) * position)) << 16; // red
-        }
-        //Log.d(TAG, "*** " + Integer.toHexString(color));
-        LightingColorFilter logoFilter = new LightingColorFilter(0xff338822, color);
-        logoPaint.setColorFilter(logoFilter);
+    // TODO: 19.10.2016 эти параметры надо сделать общими, для установки в граффике
+    float startArc = 110.0f;
+    float midlArc = 120.0f;
+    float endArc = 35.0f;
 
-        canvas.drawBitmap(logo, logoMatrix, logoPaint);
-        canvas.restore();
+
+    private void drawLinesResalt(Canvas canvas) {
+
+        float startX = rimRect.centerX();
+        float startY = rimRect.centerY();
+
+        float add = -270;
+
+        canvas.drawArc(rimRect, startArc, midlArc, true, paintArcBig);
+        canvas.drawArc(rimRect, startArc + midlArc, endArc, true, paintArcSmall);
+//        canvas.drawLine(0, 0, 480, 650,paintLine);
+//        canvas.drawLine(startX, startY, x1, y1, paintLine);
+
+        float y11 = rimRect.top - 0.04f;       // установка растояния начала штриха от круга
+        float y2 = y11 - 0.01f; // длина штриха
+
+        canvas.rotate(startArc + add, startX, startY);
+        canvas.drawLine(startX, startY, startX, y2, paintLine);
+        canvas.rotate(midlArc, startX, startY);
+        canvas.drawLine(startX, startY, startX, y2, paintLine);
+        canvas.rotate(endArc, startX, startY);
+        canvas.drawLine(startX, startY, startX, y2, paintLine);
+
+
     }
+
+//    private void drawLogo(Canvas canvas) {
+//        canvas.save(Canvas.MATRIX_SAVE_FLAG);
+//        canvas.translate(0.5f - logo.getWidth() * logoScale / 2.0f,
+//                0.5f - logo.getHeight() * logoScale / 2.0f);
+//
+//        int color = 0x00000000;
+//        float position = getRelativeTemperaturePosition();
+//        if (position < 0) {
+//            color |= (int) ((0xf0) * -position); // blue
+//        } else {
+//            color |= ((int) ((0xf0) * position)) << 16; // red
+//        }
+//        //Log.d(TAG, "*** " + Integer.toHexString(color));
+//        LightingColorFilter logoFilter = new LightingColorFilter(0xff338822, color);
+//        logoPaint.setColorFilter(logoFilter);
+//
+//        canvas.drawBitmap(logo, logoMatrix, logoPaint);
+//        canvas.restore();
+//    }
 
     private void drawHand(Canvas canvas) {
         if (handInitialized) {
@@ -455,7 +604,7 @@ public class CircleBackground extends View
         canvas.save(Canvas.MATRIX_SAVE_FLAG);
         canvas.scale(scale, scale);
 //
-        drawLogo(canvas);
+//        drawLogo(canvas);
         drawHand(canvas);
 //
         canvas.restore();
@@ -480,11 +629,15 @@ public class CircleBackground extends View
 
         background = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
         Canvas backgroundCanvas = new Canvas(background);
+        Canvas backgroundCanvasLines = new Canvas(background);
         float scale = (float) getWidth();
         backgroundCanvas.scale(scale, scale);
+        backgroundCanvasLines.scale(scale, scale);
 
+        drawRainBow(backgroundCanvas);      // радуга
         drawRim(backgroundCanvas);      // внешний круг
         drawFace(backgroundCanvas); // фон до внешнего  круга
+        drawLinesResalt(backgroundCanvasLines);
         drawScale(backgroundCanvas);
         drawTitle(backgroundCanvas);
     }
