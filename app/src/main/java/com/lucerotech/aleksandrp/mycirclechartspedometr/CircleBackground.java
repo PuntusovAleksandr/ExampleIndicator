@@ -637,7 +637,7 @@ public class CircleBackground extends View
         drawRainBow(backgroundCanvas);      // радуга
         drawRim(backgroundCanvas);      // внешний круг
         drawFace(backgroundCanvas); // фон до внешнего  круга
-        drawLinesResalt(backgroundCanvasLines);
+        drawLinesResalt(backgroundCanvasLines);  // стрелы
         drawScale(backgroundCanvas);
         drawTitle(backgroundCanvas);
     }
