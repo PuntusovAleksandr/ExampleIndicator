@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
@@ -24,12 +25,22 @@ public class CircleBackground extends View
 //        implements SensorEventListener
 {
 
+
+
+
     private static final String TAG = CircleBackground.class.getSimpleName();
 
-    private String colorBacgroundInCircle, colorRainbow = "#4bf7f9";
+    private String colorBgMain;
+    private String colorBacgroundInCircle, colorBacgroundInCircleGradient, colorRainbow = "#4bf7f9";
     private String colorOutCircleFrom, colorOutCircleTo;
     private String colorInnerCircleFrom, colorInnerCircleTo;
     private String colorSegmentBig, colorSegmentSmall, colorLines;
+
+
+    // TODO: 19.10.2016 эти параметры надо сделать общими, для установки в граффике
+    private float startArc;
+    private float middleArc;
+    private float endArc;
 
     //    private Handler handler;
 
@@ -59,6 +70,7 @@ public class CircleBackground extends View
     private Path textPath;     // text decimal
     private Paint scaleText;
     private Paint scalePaint;
+    private Paint scaleInnerPaintTransparent;// внутренний круг
     private Paint scaleInnerPaint;// внутренний круг
     private RectF scaleRect;        // круг
     private RectF scaleInnerRect;        // внутренний круг
@@ -171,13 +183,13 @@ public class CircleBackground extends View
 
         initDrawingTools();
 
-
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                setHandTarget(45f);
+//                setHandTarget(45f);
+//                setDataInChart(0, 0);
             }
-        }, 500);
+        }, 100);
     }
 
     private String getTitle() {
@@ -206,7 +218,7 @@ public class CircleBackground extends View
 //    }
 
     private void initDrawingTools() {
-        float rimRaindowSize = 0.01f;      // ширина обода
+        float rimRaindowSize = 0.015f;      // ширина обода
         rimRainbowRect = new RectF(0.03f, 0.03f, 0.96f, 0.96f);
         rimRainbowSmallRect = new RectF(rimRainbowRect.left + rimRaindowSize,
                 rimRainbowRect.top + rimRaindowSize,
@@ -234,22 +246,24 @@ public class CircleBackground extends View
 //                Shader.TileMode.CLAMP));
 //
         rimCirclePaintRainbow = new Paint();
-        rimCirclePaintRainbow.setAntiAlias(true);
-        rimCirclePaintRainbow.setStyle(Paint.Style.STROKE);
-//        rimCirclePaintRainbow.setColor(Color.YELLOW);
-        rimCirclePaintRainbow.setShader(new LinearGradient(0.0f, 0.50f, 0.40f, 0.550f,
+        rimCirclePaintRainbow.setStyle(Paint.Style.FILL);
+        rimCirclePaintRainbow.setShader(new LinearGradient(
+                0.0f, 0.50f, 0.40f, 0.550f,
                 Color.parseColor(colorRainbow),
                 Color.TRANSPARENT,
                 Shader.TileMode.CLAMP));
         rimCirclePaintRainbow.setStrokeWidth(0.015f);
 
+
+
         rimCircleSmallPaintRainbow = new Paint();
         rimCircleSmallPaintRainbow.setAntiAlias(true);
-//        rimCircleSmallPaintRainbow.setStyle(Paint.Style.STROKE);
-        rimCirclePaintRainbow.setColor(Color.YELLOW);
-//        rimCircleSmallPaintRainbow.setShader(new LinearGradient(0.0f, 0.50f, 0.40f, 0.550f,
-//                Color.parseColor(colorOutCircleFrom),
+        rimCircleSmallPaintRainbow.setStyle(Paint.Style.FILL);
+        rimCircleSmallPaintRainbow.setColor(Color.parseColor(colorBgMain));
+//        rimCircleSmallPaintRainbow.setShader(new LinearGradient(
+//                0.0f, 0.50f, 0.40f, 0.550f,
 //                Color.TRANSPARENT,
+//                Color.parseColor(colorBgMain),
 //                Shader.TileMode.CLAMP));
         rimCircleSmallPaintRainbow.setStrokeWidth(0.015f);
 
@@ -303,7 +317,7 @@ public class CircleBackground extends View
         scalePaint.setShader(new LinearGradient(0.0f, 0.0f, 0.750f, 0.750f,
                 Color.parseColor(colorInnerCircleFrom),
                 Color.parseColor(colorInnerCircleTo),
-                Shader.TileMode.REPEAT));
+                Shader.TileMode.CLAMP));
         scalePaint.setStrokeWidth(0.005f);
         scalePaint.setAntiAlias(true);
 
@@ -313,6 +327,20 @@ public class CircleBackground extends View
         scaleInnerPaint.setColor(Color.parseColor(colorBacgroundInCircle));
         scaleInnerPaint.setStrokeWidth(0.005f);
         scaleInnerPaint.setAntiAlias(true);
+
+        scaleInnerPaintTransparent = new Paint();
+        scaleInnerPaintTransparent.setStyle(Paint.Style.FILL);
+//        scaleInnerPaintTransparent.setColor(Color.parseColor(colorBacgroundInCircle));
+        scaleInnerPaintTransparent.setShader(new RadialGradient(
+                rimRainbowRect.centerX(),
+                rimRainbowRect.centerY(),
+                rimRainbowSmallRect.width(),
+                Color.parseColor(colorBacgroundInCircle),
+//                Color.colorBacgroundInCircle,
+//                Color.TRANSPARENT,
+                Color.parseColor(colorBacgroundInCircleGradient),
+                Shader.TileMode.REPEAT));
+//        scaleInnerPaintTransparent.setAntiAlias(true);
 
         // текст
         // текст на шкале
@@ -391,8 +419,12 @@ public class CircleBackground extends View
     private void setParamsColorString() {
         String centerStr = "#000000", wicksStr = "#000000", titleStr = "#000000";
 
+        // background main circle
+        colorBgMain = "#FFE8E7E9";
+
         // background circle
         colorBacgroundInCircle = "#f2f6fb";
+        colorBacgroundInCircleGradient = "#96F2F6FB";
 
         // gradient out circle
         colorOutCircleFrom = "#000000";
@@ -409,7 +441,10 @@ public class CircleBackground extends View
 //        colorLines = "#FF4081";
 
 //        if (SettingsApp.getInstance().isThemeDark()) {
+//            colorBgMain = "#FF071653";
+//
 //            colorBacgroundInCircle = "#0b1348";
+//            colorBacgroundInCircleGradient = "#5A0B1348";
 //
 //            colorOutCircleFrom = "#4bf7f9";
 //            colorOutCircleTo = "#0b1348";
@@ -420,11 +455,11 @@ public class CircleBackground extends View
 //            centerStr = "#4bf7f9";
 //            wicksStr = "#ffffff";
 //            titleStr = "#adadae";
-
-//        colorSegmentBig = "#269BFBFD";
-//        colorSegmentSmall = "#889BFBFD";
-//        colorLines = "#4bf7f9";
-
+//
+//            colorSegmentBig = "#269BFBFD";
+//            colorSegmentSmall = "#889BFBFD";
+//            colorLines = "#4bf7f9";
+//
 //        }
 
         colorWicks = Color.parseColor(wicksStr);  // вся шкала
@@ -470,8 +505,7 @@ public class CircleBackground extends View
     private void drawRainBow(Canvas canvas) {
         // first, draw the rainbow body
         canvas.drawOval(rimRainbowRect, rimCirclePaintRainbow);
-
-//        canvas.drawOval(rimRainbowSmallRect, rimCircleSmallPaintRainbow);
+        canvas.drawOval(rimRainbowSmallRect, rimCircleSmallPaintRainbow);
 
     }
 
@@ -538,12 +572,6 @@ public class CircleBackground extends View
     }
 
 
-    // TODO: 19.10.2016 эти параметры надо сделать общими, для установки в граффике
-    float startArc = 110.0f;
-    float midlArc = 120.0f;
-    float endArc = 35.0f;
-
-
     private void drawLinesResalt(Canvas canvas) {
 
         float startX = rimRect.centerX();
@@ -551,20 +579,21 @@ public class CircleBackground extends View
 
         float add = -270;
 
-        canvas.drawArc(rimRect, startArc, midlArc, true, paintArcBig);
-        canvas.drawArc(rimRect, startArc + midlArc, endArc, true, paintArcSmall);
+        canvas.drawArc(rimRect, startArc, middleArc, true, paintArcBig);
+        canvas.drawArc(rimRect, startArc + middleArc, endArc, true, paintArcSmall);
 
         float y11 = rimRect.top - 0.04f;       // установка растояния начала штриха от круга
         float y2 = y11 - 0.01f; // длина штриха
 
         canvas.rotate(startArc + add, startX, startY);
         canvas.drawLine(startX, startY, startX, y2, paintLine);
-        canvas.rotate(midlArc, startX, startY);
+        canvas.rotate(middleArc, startX, startY);
         canvas.drawLine(startX, startY, startX, y2, paintLine);
         canvas.rotate(endArc, startX, startY);
         canvas.drawLine(startX, startY, startX, y2, paintLine);
 
 
+        canvas.drawOval(scaleInnerRect, scaleInnerPaintTransparent);  // градиент для стрелочек и внутреннего круга
     }
 
 //    private void drawLogo(Canvas canvas) {
@@ -620,9 +649,10 @@ public class CircleBackground extends View
 //
         canvas.restore();
 //
-        if (handNeedsToMove()) {
-            moveHand();
-        }
+        regenerateBackground();
+//        if (handNeedsToMove()) {
+//            moveHand();
+//        }
     }
 
     @Override
@@ -640,7 +670,7 @@ public class CircleBackground extends View
 
         background = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
         Canvas backgroundCanvas = new Canvas(background);
-        Canvas backgroundCanvasLines = new Canvas(background);
+        final Canvas backgroundCanvasLines = new Canvas(background);
         float scale = (float) getWidth();
         backgroundCanvas.scale(scale, scale);
         backgroundCanvasLines.scale(scale, scale);
@@ -648,9 +678,9 @@ public class CircleBackground extends View
         drawRainBow(backgroundCanvas);      // радуга
         drawRim(backgroundCanvas);      // внешний круг
         drawFace(backgroundCanvas); // фон до внешнего  круга
-        drawLinesResalt(backgroundCanvasLines);  // стрелы
         drawScale(backgroundCanvas);
-        drawTitle(backgroundCanvas);
+//        drawTitle(backgroundCanvas);
+        drawLinesResalt(backgroundCanvasLines);  // стрелы
     }
 
     private boolean handNeedsToMove() {
@@ -726,4 +756,34 @@ public class CircleBackground extends View
         handInitialized = true;
         invalidate();
     }
+
+    public void setDataInChart(float valueGeneral, float max, float min) {
+
+        float add = 120;
+        this.startArc = add + min;
+        this.endArc = 0;
+        this.middleArc = 0;
+
+        if (valueGeneral != min && valueGeneral > min) {
+            this.middleArc = valueGeneral - min;
+        } else {
+            this.middleArc = 0;
+        }
+
+        if (max > valueGeneral) {
+            this.endArc = max - min- valueGeneral;
+        } else {
+            this.endArc = 0;
+        }
+
+        invalidate();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                invalidate();
+            }
+        }, 200);
+    }
+
 }
