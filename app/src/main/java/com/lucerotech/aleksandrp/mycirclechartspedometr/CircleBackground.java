@@ -26,8 +26,6 @@ public class CircleBackground extends View
 {
 
 
-
-
     private static final String TAG = CircleBackground.class.getSimpleName();
 
     private String colorBgMain;
