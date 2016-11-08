@@ -5,14 +5,15 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#e8e7e9"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
-    android:background="#e8e7e9"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.lucerotech.aleksandrp.mycirclechartspedometr.MainActivity">
 
     <com.lucerotech.aleksandrp.mycirclechartspedometr.CircleBackground
+        android:id="@+id/view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_centerInParent="true"/>

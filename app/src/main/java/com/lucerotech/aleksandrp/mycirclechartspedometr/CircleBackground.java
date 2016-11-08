@@ -2,12 +2,15 @@ package com.lucerotech.aleksandrp.mycirclechartspedometr;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RadialGradient;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
@@ -17,16 +20,26 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
+import static com.lucerotech.aleksandrp.mycirclechartspedometr.MainActivity.PICKER_BONE_MASS;
+import static com.lucerotech.aleksandrp.mycirclechartspedometr.MainActivity.PICKER_CALORIES;
+import static com.lucerotech.aleksandrp.mycirclechartspedometr.MainActivity.PICKER_FAT;
+import static com.lucerotech.aleksandrp.mycirclechartspedometr.MainActivity.PICKER_FAT_LEVEL;
+import static com.lucerotech.aleksandrp.mycirclechartspedometr.MainActivity.PICKER_MUSCLE_MASS;
+import static com.lucerotech.aleksandrp.mycirclechartspedometr.MainActivity.PICKER_WATER;
+import static com.lucerotech.aleksandrp.mycirclechartspedometr.MainActivity.PICKER_WEIGHT;
+
 /**
  * Created by AleksandrP on 06.10.2016.
  */
 
-public class CircleBackground extends View
-//        implements SensorEventListener
-{
+public class CircleBackground extends View   {
 
 
     private static final String TAG = CircleBackground.class.getSimpleName();
+
+    private int TIME_UPDATE_INVALIDATE = 250;
+
+    private int resRaindow;
 
     private String colorBgMain;
     private String colorBacgroundInCircle, colorBacgroundInCircleGradient, colorRainbow = "#4bf7f9";
@@ -39,6 +52,8 @@ public class CircleBackground extends View
     private float startArc;
     private float middleArc;
     private float endArc;
+
+    private float arcForRotationRainbow;
 
     //    private Handler handler;
 
@@ -77,10 +92,10 @@ public class CircleBackground extends View
     private Paint titlePaint;
     private Path titlePath;
 
-//    private Paint logoPaint;
-//    private Bitmap logo;
-//    private Matrix logoMatrix;
-//    private float logoScale;
+    private Paint logoPaint;
+    private Bitmap logo;
+    private Matrix logoMatrix;
+    private float logoScale;
 
     private Paint handPaint;
     private Path handPath;
@@ -92,13 +107,14 @@ public class CircleBackground extends View
     private Bitmap background; // holds the cached static part
 
     // scale configuration
-    private static final int countWicks = 4;        // количество штрихов в разделители
-    private static final int totalNicks = 48;       // общее количество разделителей
-    private static final float degreesPerNick = 360.0f / totalNicks;        // градусов на1 шьрих
-    private static final int centerDegree = totalNicks / 2; // the one in the top center (12 o'clock)
-    private static final int minDegrees = 50;
-    private static final int maxDegrees = 130;
-    private static final int showTextItem = 5;
+    private int countWicks = 5;        // количество штрихов в разделители
+    private static int totalNicks;       // общее количество разделителей
+    private static int nicksShowing;  // сколько будет показано
+    private static float degreesPerNick;        // градусов на 1 шьрих
+    private static final int centerDegree = (0); // the one in the top center (12 o'clock)
+    private int minDegrees;
+    private int maxDegrees;
+    private static final int showTextItem = 10;
 
 
     // цвет
@@ -108,15 +124,6 @@ public class CircleBackground extends View
 
     // text размер
     private static final float textSize = 0.05f;       // сентер
-
-    // hand dynamics -- all are angular expressed in F degrees
-    private boolean handInitialized = false;
-    private float handPosition = centerDegree;
-    private float handTarget = centerDegree;
-    private float handVelocity = 0.0f;
-    private float handAcceleration = 0.0f;
-    private long lastHandMoveTime = -1L;
-
 
     public CircleBackground(Context context) {
         super(context);
@@ -145,84 +152,19 @@ public class CircleBackground extends View
         super.onDetachedFromWindow();
     }
 
-//    @Override
-//    protected void onRestoreInstanceState(Parcelable state) {
-//        Bundle bundle = (Bundle) state;
-//        Parcelable superState = bundle.getParcelable("superState");
-//        super.onRestoreInstanceState(superState);
-//
-//        handInitialized = bundle.getBoolean("handInitialized");
-//        handPosition = bundle.getFloat("handPosition");
-//        handTarget = bundle.getFloat("handTarget");
-//        handVelocity = bundle.getFloat("handVelocity");
-//        handAcceleration = bundle.getFloat("handAcceleration");
-//        lastHandMoveTime = bundle.getLong("lastHandMoveTime");
-//    }
-//
-//    @Override
-//    protected Parcelable onSaveInstanceState() {
-//        Parcelable superState = super.onSaveInstanceState();
-//
-//        Bundle state = new Bundle();
-//        state.putParcelable("superState", superState);
-//        state.putBoolean("handInitialized", handInitialized);
-//        state.putFloat("handPosition", handPosition);
-//        state.putFloat("handTarget", handTarget);
-//        state.putFloat("handVelocity", handVelocity);
-//        state.putFloat("handAcceleration", handAcceleration);
-//        state.putLong("lastHandMoveTime", lastHandMoveTime);
-//        return state;
-//    }
-
     private void init() {
-//        handler = new Handler();
-
         setParamsColorString();
-
         initDrawingTools();
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-//                setHandTarget(45f);
-//                setDataInChart(0, 0);
-            }
-        }, 100);
     }
-
-    private String getTitle() {
-        return "AleksandrP";
-    }
-
-//    private SensorManager getSensorManager() {
-//        return (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
-//    }
-
-//    private void attachToSensor() {
-//        SensorManager sensorManager = getSensorManager();
-//
-//        List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_TEMPERATURE);
-//        if (sensors.size() > 0) {
-//            Sensor sensor = sensors.get(0);
-//            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST, handler);
-//        } else {
-//            Log.e(TAG, "No temperature sensor found");
-//        }
-//    }
-
-//    private void detachFromSensor() {
-//        SensorManager sensorManager = getSensorManager();
-//        sensorManager.unregisterListener(this);
-//    }
 
     private void initDrawingTools() {
-        float rimRaindowSize = 0.015f;      // ширина обода
+        float rimRaindowSize = 0.03f;      // ширина обода
         rimRainbowRect = new RectF(0.03f, 0.03f, 0.96f, 0.96f);
         rimRainbowSmallRect = new RectF(rimRainbowRect.left + rimRaindowSize,
                 rimRainbowRect.top + rimRaindowSize,
                 rimRainbowRect.right - rimRaindowSize,
                 rimRainbowRect.bottom - rimRaindowSize);
-        rimRect = new RectF(0.1f, 0.1f, 0.9f, 0.9f);
+        rimRect = new RectF(0.12f, 0.12f, 0.88f, 0.88f);
 
 
         // the linear gradient is a bit skewed for realism
@@ -233,16 +175,6 @@ public class CircleBackground extends View
                 Color.parseColor(colorOutCircleTo),
                 Shader.TileMode.CLAMP));
 
-        //
-
-        // the linear gradient is a bit skewed for realism
-//        rimCirclePaintRainbow = new Paint();
-//        rimCirclePaintRainbow.setFlags(Paint.ANTI_ALIAS_FLAG);
-//        rimCirclePaintRainbow.setShader(new LinearGradient(0.0f, 0.40f, 0.90f, 0.50f,
-//                Color.parseColor(colorOutCircleFrom),
-//                Color.parseColor(colorOutCircleTo),
-//                Shader.TileMode.CLAMP));
-//
         rimCirclePaintRainbow = new Paint();
         rimCirclePaintRainbow.setStyle(Paint.Style.FILL);
         rimCirclePaintRainbow.setShader(new LinearGradient(
@@ -251,7 +183,6 @@ public class CircleBackground extends View
                 Color.TRANSPARENT,
                 Shader.TileMode.CLAMP));
         rimCirclePaintRainbow.setStrokeWidth(0.015f);
-
 
 
         rimCircleSmallPaintRainbow = new Paint();
@@ -275,7 +206,7 @@ public class CircleBackground extends View
         paintLine = new Paint();
         paintLine.setColor(Color.parseColor(colorLines));
 //        paintLine.setColor(Color.BLUE);
-        paintLine.setStrokeWidth(0.005f);
+        paintLine.setStrokeWidth(0.003f);
 
         rimCirclePaint = new Paint();
         rimCirclePaint.setAntiAlias(true);
@@ -290,19 +221,6 @@ public class CircleBackground extends View
                 rimRect.right - rimSize,
                 rimRect.bottom - rimSize);
 
-//        faceTexture = BitmapFactory.decodeResource(getContext().getResources(),
-//                R.drawable.background_dark);
-//        BitmapShader paperShader = new BitmapShader(faceTexture,
-//                Shader.TileMode.MIRROR,
-//                Shader.TileMode.MIRROR);
-//        Matrix paperMatrix = new Matrix();
-//        facePaint = new Paint();
-//        facePaint.setFilterBitmap(true);
-//        paperMatrix.setScale(1.0f / faceTexture.getWidth(),
-//                1.0f / faceTexture.getHeight());
-//        paperShader.setLocalMatrix(paperMatrix);
-//        facePaint.setStyle(Paint.Style.FILL);
-//        facePaint.setShader(paperShader);
 
         rimShadowPaint = new Paint();
         rimShadowPaint.setColor(Color.parseColor(colorBacgroundInCircle));
@@ -347,7 +265,6 @@ public class CircleBackground extends View
         scaleText.setColor(colorWicks);
         scaleText.setStrokeWidth(0.002f);
         scaleText.setAntiAlias(true);
-        // текст на шкале
         scaleText.setTextSize(textSize);
         scaleText.setTypeface(Typeface.SANS_SERIF);
         scaleText.setTextScaleX(0.5f);
@@ -355,7 +272,7 @@ public class CircleBackground extends View
 
         // текста
         textPath = new Path();
-        textPath.addArc(new RectF(0.24f, 0.24f, 0.76f, 0.76f), -200.0f, -180.0f);
+        textPath.addArc(new RectF(0.24f, 0.24f, 0.76f, 0.76f), 0.0f, -180.0f);
 //        textPath.addArc(new RectF(0.24f, 0.24f, 0.76f, 0.76f), -120.0f, -180.0f);
 
 
@@ -379,15 +296,6 @@ public class CircleBackground extends View
 
         titlePath = new Path();
         titlePath.addArc(new RectF(0.24f, 0.24f, 0.76f, 0.76f), -180.0f, -180.0f);
-
-
-//        logoPaint = new Paint();
-//        logoPaint.setFilterBitmap(true);
-//        logo = BitmapFactory.decodeResource(getContext().getResources(), R.mipmap.ic_launcher);
-//        logoMatrix = new Matrix();
-//        logoScale = (1.0f / logo.getWidth()) * 0.3f;
-//        ;
-//        logoMatrix.setScale(logoScale, logoScale);
 
         handPaint = new Paint();
         handPaint.setAntiAlias(true);
@@ -417,12 +325,14 @@ public class CircleBackground extends View
     private void setParamsColorString() {
         String centerStr = "#000000", wicksStr = "#000000", titleStr = "#000000";
 
+        resRaindow = R.drawable.rainbow_light_;
+
         // background main circle
         colorBgMain = "#FFE8E7E9";
 
         // background circle
-        colorBacgroundInCircle = "#f2f6fb";
-        colorBacgroundInCircleGradient = "#96F2F6FB";
+        colorBacgroundInCircle = "#FFE8E7E9";
+        colorBacgroundInCircleGradient = "#FFE8E7E9";
 
         // gradient out circle
         colorOutCircleFrom = "#000000";
@@ -435,10 +345,12 @@ public class CircleBackground extends View
         // color lines
         colorSegmentBig = "#54A1A1A1";
         colorSegmentSmall = "#9A4D4D4D";
-        colorLines = "#000000";
+        colorLines = "#AA000000";
 //        colorLines = "#FF4081";
 
 //        if (SettingsApp.getInstance().isThemeDark()) {
+//            resRaindow = R.drawable.rainbow_dark_;
+//
 //            colorBgMain = "#FF071653";
 //
 //            colorBacgroundInCircle = "#0b1348";
@@ -502,7 +414,7 @@ public class CircleBackground extends View
     // рисует радугу
     private void drawRainBow(Canvas canvas) {
         // first, draw the rainbow body
-        canvas.drawOval(rimRainbowRect, rimCirclePaintRainbow);
+//        canvas.drawOval(rimRainbowRect, rimCirclePaintRainbow);
         canvas.drawOval(rimRainbowSmallRect, rimCircleSmallPaintRainbow);
 
     }
@@ -530,19 +442,27 @@ public class CircleBackground extends View
         canvas.drawOval(scaleInnerRect, scaleInnerPaint);
 
         canvas.save(Canvas.MATRIX_SAVE_FLAG);
+        canvas.rotate(180, 0.5f, 0.5f);
         for (int i = 0; i < totalNicks; ++i) {
             float y1 = scaleRect.top - 0.02f;       // установка растояния начала штриха от круга
-            float y2 = y1 - 0.01f; // длина штриха
+            float y2 = y1 - 0.02f; // длина штриха
 
-            canvas.drawLine(0.5f, y1, 0.5f, y2, scalePaint);        // 1 штрих
+            if (i >= 0 && i <= nicksShowing) {
+                canvas.drawLine(0.5f, y1, 0.5f, y2, scalePaint);        // 1 штрих
 
-            // вычисляем значение
-            if (i % countWicks == 0) {
-                int value = nickToDegree(i);
-
-                if (value >= minDegrees && value <= maxDegrees) {
-                    String valueString = Integer.toString(value);
-                    canvas.drawTextOnPath(valueString, textPath, 0.0f, 0.1f, scaleText);
+                // вычисляем значение
+                if (i % countWicks == 0) {
+                    float value = nickToDegree(i);
+                    if (value >= minDegrees && value <= maxDegrees) {
+                        if (maxDegrees > 1000 && i % 2 != 0) {
+                            continue;
+                        }
+                        int v = (int) (value / 5);      // округление числа до кратного 5
+                        value = v * 5;
+                        String valueString = Integer.toString((int) value);
+                        drawTitle(canvas, valueString);
+//                        canvas.drawTextOnPath(valueString, textPath, 0.0f, 0.1f, scaleText);
+                    }
                 }
             }
 
@@ -551,22 +471,50 @@ public class CircleBackground extends View
         canvas.restore();
     }
 
-    private int nickToDegree(int nick) {
-        int i = (maxDegrees - minDegrees) / (showTextItem * countWicks);
+    private void drawTitle(Canvas canvas, String mValueString) {
+        //Save original font size
+        float originalTextSize = scaleText.getTextSize();
+        float unitPosition = 0.07f;
 
-        int rawDegree = nick * i;
+        // set a magnification factor
+        final float magnifier = 50f;
+
+        // Scale the canvas
+        canvas.save();
+        canvas.scale(1f / magnifier, 1f / magnifier);
+
+        // create new rect and paths based on the new scale
+        RectF unitRect = new RectF();
+        unitRect.set((rimRect.left + unitPosition) * magnifier,
+                (rimRect.top + unitPosition) * magnifier,
+                (rimRect.right - unitPosition) * magnifier,
+                (rimRect.bottom - unitPosition) * magnifier);
+        Path unitPath = new Path();
+        unitPath.addArc(unitRect, 180.0f, 180.0f);
+
+        // increase the font size
+        scaleText.setTextSize(originalTextSize * magnifier);
+
+        // do the drawing of the text
+        canvas.drawTextOnPath(mValueString, unitPath, 0.0f, 0.0f, scaleText);
+
+        // bring everything back to normal
+        canvas.restore();
+        scaleText.setTextSize(originalTextSize);
+        canvas.drawPath(unitPath, scaleText);
+    }
+
+    private float nickToDegree(int nick) {
+        if (nick == 0) {
+            return minDegrees;
+        }
+//        int i = (maxDegrees - minDegrees) / (showTextItem * countWicks);
+        float i = (float) (maxDegrees - minDegrees) / (nicksShowing);     // цена деления
+
+        float rawDegree = nick * i;
 //        int rawDegree = ((nick < totalNicks / 2) ? nick : (nick - totalNicks)) * 2;
-        int shiftedDegree = rawDegree + centerDegree;
+        float shiftedDegree = (rawDegree + minDegrees);
         return shiftedDegree;
-    }
-
-    private float degreeToAngle(float degree) {
-        return (degree - centerDegree) / 2.0f * degreesPerNick;
-    }
-
-    private void drawTitle(Canvas canvas) {
-        String title = getTitle();
-        canvas.drawTextOnPath(title, titlePath, 0.0f, 0.0f, titlePaint);
     }
 
 
@@ -575,55 +523,33 @@ public class CircleBackground extends View
         float startX = rimRect.centerX();
         float startY = rimRect.centerY();
 
-        float add = -270;
+        float add = -180;
 
-        canvas.drawArc(rimRect, startArc, middleArc, true, paintArcBig);
-        canvas.drawArc(rimRect, startArc + middleArc, endArc, true, paintArcSmall);
+//        canvas.drawArc(rimRect, startArc, middleArc, true, paintArcBig);
+//        canvas.drawArc(rimRect, startArc + middleArc, endArc, true, paintArcSmall);
 
-        float y11 = rimRect.top - 0.04f;       // установка растояния начала штриха от круга
-        float y2 = y11 - 0.01f; // длина штриха
+        float y11 = rimRect.top - 0.03f;       // установка растояния начала штриха от круга
 
-        canvas.rotate(startArc + add, startX, startY);
-        canvas.drawLine(startX, startY, startX, y2, paintLine);
-        canvas.rotate(middleArc, startX, startY);
-        canvas.drawLine(startX, startY, startX, y2, paintLine);
-        canvas.rotate(endArc, startX, startY);
-        canvas.drawLine(startX, startY, startX, y2, paintLine);
+//        canvas.rotate(startArc + add, startX, startY);
+//        canvas.drawLine(startX, startY, startX, y11, paintLine);
+        canvas.rotate(middleArc + add, startX, startY);
+//        canvas.drawLine(startX, startY, startX, y11, paintLine);
+//        canvas.rotate(endArc, startX, startY);
+//        canvas.drawLine(startX, startY, startX, y11, paintLine);
 
+        Paint pBun = new Paint();
+        pBun.setColor(Color.parseColor(colorLines));
+        canvas.drawCircle(startX, rimRect.top - 0.003f, 0.01f, pBun);        // рисуем шарик на стрелочке
 
         canvas.drawOval(scaleInnerRect, scaleInnerPaintTransparent);  // градиент для стрелочек и внутреннего круга
-    }
 
-//    private void drawLogo(Canvas canvas) {
-//        canvas.save(Canvas.MATRIX_SAVE_FLAG);
-//        canvas.translate(0.5f - logo.getWidth() * logoScale / 2.0f,
-//                0.5f - logo.getHeight() * logoScale / 2.0f);
-//
-//        int color = 0x00000000;
-//        float position = getRelativeTemperaturePosition();
-//        if (position < 0) {
-//            color |= (int) ((0xf0) * -position); // blue
-//        } else {
-//            color |= ((int) ((0xf0) * position)) << 16; // red
-//        }
-//        //Log.d(TAG, "*** " + Integer.toHexString(color));
-//        LightingColorFilter logoFilter = new LightingColorFilter(0xff338822, color);
-//        logoPaint.setColorFilter(logoFilter);
-//
-//        canvas.drawBitmap(logo, logoMatrix, logoPaint);
-//        canvas.restore();
-//    }
-
-    private void drawHand(Canvas canvas) {
-        if (handInitialized) {
-            float handAngle = degreeToAngle(handPosition);
-            canvas.save(Canvas.MATRIX_SAVE_FLAG);
-            canvas.rotate(handAngle, 0.5f, 0.5f);
-            canvas.drawPath(handPath, handPaint);
-            canvas.restore();
-
-            canvas.drawCircle(0.5f, 0.5f, 0.01f, handScrewPaint);
-        }
+        Shader shader = new LinearGradient(
+                startX, startY, startX, y11,
+                Color.TRANSPARENT,
+                Color.parseColor(colorLines),
+                Shader.TileMode.REPEAT /*or REPEAT*/);
+        paintLine.setShader(shader);
+        canvas.drawLine(startX, startY - 0.15f, startX, y11, paintLine);
     }
 
     private void drawBackground(Canvas canvas) {
@@ -641,16 +567,9 @@ public class CircleBackground extends View
         float scale = (float) getWidth();
         canvas.save(Canvas.MATRIX_SAVE_FLAG);
         canvas.scale(scale, scale);
-//
-//        drawLogo(canvas);
-        drawHand(canvas);
-//
+
         canvas.restore();
-//
         regenerateBackground();
-//        if (handNeedsToMove()) {
-//            moveHand();
-//        }
     }
 
     @Override
@@ -668,111 +587,149 @@ public class CircleBackground extends View
 
         background = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
         Canvas backgroundCanvas = new Canvas(background);
-        final Canvas backgroundCanvasLines = new Canvas(background);
+        Canvas backgroundCanvasLines = new Canvas(background);
         float scale = (float) getWidth();
         backgroundCanvas.scale(scale, scale);
         backgroundCanvasLines.scale(scale, scale);
 
-        drawRainBow(backgroundCanvas);      // радуга
+        drawBigRainbow();     // радуга
         drawRim(backgroundCanvas);      // внешний круг
         drawFace(backgroundCanvas); // фон до внешнего  круга
-        drawScale(backgroundCanvas);
+        drawScale(backgroundCanvasLines);
 //        drawTitle(backgroundCanvas);
         drawLinesResalt(backgroundCanvasLines);  // стрелы
+
     }
 
-    private boolean handNeedsToMove() {
-        return Math.abs(handPosition - handTarget) > 0.01f;
+    private void drawBigRainbow() {
+        logoPaint = new Paint();
+        logoPaint.setFilterBitmap(true);
+        logo = BitmapFactory.decodeResource(getContext().getResources(), resRaindow);
+        logoMatrix = new Matrix();
+        float scale = (float) getWidth();
+        logoScale = (scale) / logo.getWidth();
+        logoMatrix.setScale(logoScale, logoScale, logoScale, logoScale);
+        Canvas canvas = new Canvas(background);
+
+        canvas.save(Canvas.MATRIX_SAVE_FLAG);
+        canvas.translate(0, 0);
+
+        Rect rect = canvas.getClipBounds();
+        canvas.rotate(arcForRotationRainbow, rect.exactCenterX(), rect.exactCenterY());
+
+        canvas.drawBitmap(logo, logoMatrix, rimCirclePaintRainbow);
+        canvas.restore();
+
     }
 
-    private void moveHand() {
-        if (!handNeedsToMove()) {
-            return;
+    public void setDataInChart(float valueGeneral, float max, float min, int mI) {
+
+        int preMax = 0, preMin = 0;
+        float arcRainbow = 0;
+        countWicks = 5;
+        totalNicks = 140;       // общее количество разделителей
+
+        switch (mI) {
+            case PICKER_WATER:
+                preMin = 0;
+                preMax = 100;
+                arcRainbow = 30.0f;
+                totalNicks = 140;       // общее количество разделителей
+                break;
+
+            case PICKER_CALORIES:
+                preMin = 0;
+                preMax = 7000;
+                arcRainbow = -10.0f;
+                totalNicks = 140;       // общее количество разделителей
+                break;
+
+            case PICKER_WEIGHT:
+//                if (SettingsApp.getInstance().getMetric()) {
+//                    preMin = 0;
+//                    preMax = 184;
+//                    countWicks = 7;        // количество штрихов в разделители
+//                    totalNicks = 210;       // общее количество разделителей
+//                } else {
+                    preMin = 0;
+                    preMax = 400;
+//                }
+                arcRainbow = 5.0f;
+                break;
+
+            case PICKER_FAT_LEVEL:
+                preMin = 0;
+                preMax = 100;
+                arcRainbow = -30.0f;
+                totalNicks = 180;       // общее количество разделителей
+                break;
+
+            case PICKER_MUSCLE_MASS:
+//                if (SettingsApp.getInstance().getMetric()) {
+//                    preMin = 0;
+//                    preMax = 184;
+//                    countWicks = 7;        // количество штрихов в разделители
+//                    totalNicks = 210;       // общее количество разделителей
+//                } else {
+                    preMin = 0;
+                    preMax = 400;
+//                }
+                arcRainbow = 0.0f;
+                break;
+
+            case PICKER_BONE_MASS:
+//                if (SettingsApp.getInstance().getMetric()) {
+//                    preMin = 0;
+//                    preMax = 184;
+//                    countWicks = 7;        // количество штрихов в разделители
+//                    totalNicks = 210;       // общее количество разделителей
+//                } else {
+                    preMin = 0;
+                    preMax = 400;
+//                }
+                arcRainbow = -5.0f;
+                break;
+
+            case PICKER_FAT:
+                preMin = 0;
+                preMax = 100;
+                arcRainbow = -30.0f;
+                totalNicks = 180;       // общее количество разделителей
+                break;
         }
 
-        if (lastHandMoveTime != -1L) {
-            long currentTime = System.currentTimeMillis();
-            float delta = (currentTime - lastHandMoveTime) / 1000.0f;
 
-            float direction = Math.signum(handVelocity);
-            if (Math.abs(handVelocity) < 90.0f) {
-                handAcceleration = 5.0f * (handTarget - handPosition);
-            } else {
-                handAcceleration = 0.0f;
-            }
-            handPosition += handVelocity * delta;
-            handVelocity += handAcceleration * delta;
-            if ((handTarget - handPosition) * direction < 0.01f * direction) {
-                handPosition = handTarget;
-                handVelocity = 0.0f;
-                handAcceleration = 0.0f;
-                lastHandMoveTime = -1L;
-            } else {
-                lastHandMoveTime = System.currentTimeMillis();
-            }
-            invalidate();
-        } else {
-            lastHandMoveTime = System.currentTimeMillis();
-            moveHand();
-        }
-    }
+        nicksShowing = (totalNicks / 7) * 4;  // сколько будет показано
+        degreesPerNick = 360.0f / totalNicks;        // градусов на 1 шьрих
 
-//    @Override
-//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-//
-//    }
+        this.maxDegrees = preMax;
+        this.minDegrees = preMin;
 
-//    @Override
-//    public void onSensorChanged(SensorEvent sensorEvent) {
-//        if (sensorEvent.values.length > 0) {
-//            float temperatureC = sensorEvent.values[0];
-//            //Log.i(TAG, "*** Temperature: " + temperatureC);
-//
-//            float temperatureF = (9.0f / 5.0f) * temperatureC + 32.0f;
-//            setHandTarget(temperatureF);
-//        } else {
-//            Log.w(TAG, "Empty sensor event received");
-//        }
-//    }
 
-    private float getRelativeTemperaturePosition() {
-        if (handPosition < centerDegree) {
-            return -(centerDegree - handPosition) / (float) (centerDegree - minDegrees);
-        } else {
-            return (handPosition - centerDegree) / (float) (maxDegrees - centerDegree);
-        }
-    }
+        float i = (float) nicksShowing / (maxDegrees - minDegrees);
 
-    // // TODO: 06.10.2016 устанавливает температуру
-    private void setHandTarget(float temperature) {
-        if (temperature < minDegrees) {
-            temperature = minDegrees;
-        } else if (temperature > maxDegrees) {
-            temperature = maxDegrees;
-        }
-        handTarget = temperature;
-        handInitialized = true;
-        invalidate();
-    }
-
-    public void setDataInChart(float valueGeneral, float max, float min) {
-
-        float add = 120;
-        this.startArc = add + min;
+        this.middleArc = valueGeneral * i * degreesPerNick;
+        this.startArc = 0;
         this.endArc = 0;
-        this.middleArc = 0;
 
-        if (valueGeneral != min && valueGeneral > min) {
-            this.middleArc = valueGeneral - min;
-        } else {
-            this.middleArc = 0;
-        }
-
-        if (max > valueGeneral) {
-            this.endArc = max - min- valueGeneral;
-        } else {
-            this.endArc = 0;
-        }
+        this.arcForRotationRainbow = arcRainbow;
+// старая версия для трез стрелок
+//        float add = 120;
+//        this.startArc = add + min;
+//        this.endArc = 0;
+//        this.middleArc = 0;
+//
+//        if (valueGeneral != min && valueGeneral > min) {
+//            this.middleArc = valueGeneral - min;
+//        } else {
+//            this.middleArc = 0;
+//        }
+//
+//        if (max > valueGeneral) {
+//            this.endArc = max - min - valueGeneral;
+//        } else {
+//            this.endArc = 0;
+//        }
 
         invalidate();
 
@@ -780,8 +737,20 @@ public class CircleBackground extends View
             @Override
             public void run() {
                 invalidate();
+                repertInvalidate();
             }
-        }, 200);
+        }, TIME_UPDATE_INVALIDATE);
+    }
+
+
+    private void repertInvalidate() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                invalidate();
+                repertInvalidate();
+            }
+        }, TIME_UPDATE_INVALIDATE);
     }
 
 }
